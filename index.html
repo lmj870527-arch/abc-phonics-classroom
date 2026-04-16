@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phonics Play 🔤</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:#F5F3FF;color:#2C2C2A;min-height:100vh}
+.app-header{padding:14px 16px 10px;text-align:center;background:#3C3489}
+.app-title{font-family:'Fredoka One',cursive;font-size:26px;color:#fff;letter-spacing:1px}
+.app-sub{font-size:11px;color:rgba(255,255,255,0.75);margin-top:2px}
+.nav-tabs{display:flex;background:#26215C}
+.nav-tab{flex:1;padding:10px 4px;border:none;background:transparent;color:rgba(255,255,255,0.55);font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s}
+.nav-tab.active{color:#fff;border-bottom-color:#EF9F27}
+.screen{display:none;padding:14px;max-width:600px;margin:0 auto}
+.screen.active{display:block}
+.vowel-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.vtab{flex:1;min-width:44px;padding:8px 4px;border-radius:10px;border:2px solid transparent;background:#fff;font-family:'Fredoka One',cursive;font-size:18px;cursor:pointer;text-align:center;transition:all .15s;color:#888}
+.vtab.active{border-color:var(--vc);background:var(--vbg);color:var(--vc)}
+.vtab:hover{border-color:var(--vc)}
+.word-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.word-card{background:#fff;border-radius:14px;border:2px solid rgba(0,0,0,0.08);padding:12px 10px;cursor:pointer;transition:all .15s;text-align:center;user-select:none}
+.word-card:hover{transform:translateY(-2px);border-color:var(--vc,#534AB7)}
+.word-card:active{transform:scale(0.95)}
+.word-card.playing{border-color:var(--vc,#534AB7);background:var(--vbg,#EEEDFE);animation:pop .35s ease}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.07)}100%{transform:scale(1)}}
+.wc-emoji{font-size:28px;margin-bottom:4px}
+.wc-word{font-family:'Fredoka One',cursive;font-size:22px;margin-bottom:3px}
+.wc-ipa{font-size:11px;color:#aaa;margin-bottom:6px;font-style:italic}
+.wc-structure{display:flex;justify-content:center;gap:2px;margin-top:6px}
+.wc-c{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;font-size:12px;font-weight:800}
+.wc-cons{background:#F1EFE8;color:#5F5E5A}
+.wc-vow{background:var(--vbg,#EEEDFE);color:var(--vc,#534AB7)}
+.qhdr{background:#fff;border-radius:14px;border:1px solid rgba(0,0,0,0.08);padding:12px 14px;margin-bottom:12px}
+.qmeta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.qprog-lbl{font-size:12px;color:#888;font-weight:800}
+.qscore{background:#EAF3DE;color:#27500A;border-radius:10px;padding:3px 10px;font-size:12px;font-weight:800}
+.prog-bar{height:7px;background:#F1EFE8;border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;background:#534AB7;border-radius:4px;transition:width .4s ease}
+.qcard{background:#fff;border-radius:18px;border:1px solid rgba(0,0,0,0.08);padding:22px 16px;text-align:center;margin-bottom:12px}
+.q-instr{font-size:12px;color:#888;margin-bottom:14px;font-weight:700}
+.play-btn{width:68px;height:68px;border-radius:50%;background:#534AB7;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:26px;color:#fff;transition:all .2s}
+.play-btn:hover{opacity:.85;transform:scale(1.04)}
+.play-btn:active{transform:scale(.93)}
+.play-btn.playing{animation:popbtn .5s ease}
+@keyframes popbtn{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+.q-hint{font-size:11px;color:#bbb}
+.q-opts{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}
+.opt-btn{background:#fff;border:2.5px solid rgba(0,0,0,0.12);border-radius:13px;padding:14px 8px;font-family:'Fredoka One',cursive;font-size:20px;color:#534AB7;cursor:pointer;transition:all .15s;text-align:center;line-height:1.4}
+.opt-btn:hover:not(:disabled){border-color:#534AB7;background:#EEEDFE;transform:translateY(-1px)}
+.opt-btn.correct{background:#EAF3DE;border-color:#639922;color:#27500A}
+.opt-btn.wrong{background:#FCEBEB;border-color:#A32D2D;color:#791F1F}
+.opt-btn:disabled{cursor:default}
+.fb{text-align:center;padding:10px 12px;border-radius:11px;font-size:14px;font-weight:800;display:none;margin-bottom:10px}
+.fb.correct{background:#EAF3DE;color:#27500A;display:block}
+.fb.wrong{background:#FCEBEB;color:#791F1F;display:block}
+.next-btn{width:100%;padding:13px;background:#534AB7;color:#fff;border:none;border-radius:13px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;cursor:pointer;display:none;transition:all .2s}
+.next-btn.vis{display:block}
+.next-btn:hover{opacity:.88;transform:translateY(-1px)}
+.start-wrap{text-align:center;padding:18px 12px}
+.start-title{font-family:'Fredoka One',cursive;font-size:22px;color:#534AB7;margin-bottom:6px}
+.start-desc{font-size:12px;color:#888;margin-bottom:18px;line-height:1.6}
+.qsec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}
+.qsec-card{background:#fff;border:2px solid rgba(0,0,0,0.08);border-radius:13px;padding:12px 6px;cursor:pointer;transition:all .15s;text-align:center}
+.qsec-card:hover{border-color:#534AB7}
+.qsc-icon{font-size:20px;margin-bottom:4px}
+.qsc-lbl{font-size:10px;font-weight:800;color:#2C2C2A}
+.qsc-cnt{font-size:10px;color:#888;margin-top:2px}
+.start-btn{width:100%;padding:15px;background:#534AB7;color:#fff;border:none;border-radius:15px;font-family:'Nunito',sans-serif;font-size:16px;font-weight:800;cursor:pointer;transition:all .2s}
+.start-btn:hover{opacity:.88;transform:translateY(-1px)}
+.res-wrap{text-align:center;padding:18px 14px}
+.res-emoji{font-size:52px;margin-bottom:10px}
+.res-title{font-family:'Fredoka One',cursive;font-size:24px;color:#534AB7;margin-bottom:4px}
+.res-big{font-family:'Fredoka One',cursive;font-size:48px;margin:6px 0}
+.res-meta{font-size:13px;color:#888;margin-bottom:18px}
+.bdown{background:#fff;border-radius:14px;border:1px solid rgba(0,0,0,0.08);padding:14px;margin-bottom:14px;text-align:left}
+.bd-title{font-size:11px;font-weight:800;color:#888;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px}
+.bd-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(0,0,0,0.06)}
+.bd-item:last-child{border-bottom:none}
+.bd-word{font-family:'Fredoka One',cursive;font-size:14px;color:#534AB7;width:52px;flex-shrink:0}
+.bd-bwrap{flex:1;height:7px;background:#F1EFE8;border-radius:4px;overflow:hidden}
+.bd-bar{height:100%;border-radius:4px;transition:width .6s ease}
+.bd-bar.good{background:#639922}.bd-bar.ok{background:#BA7517}.bd-bar.bad{background:#A32D2D}
+.bd-lbl{font-size:11px;font-weight:800;width:32px;text-align:right;flex-shrink:0;color:#888}
+.bd-ico{font-size:13px;width:18px;flex-shrink:0}
+.rev-title{font-size:12px;font-weight:800;color:#A32D2D;margin-bottom:8px}
+.rev-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.rev-chip{background:#FCEBEB;color:#791F1F;border-radius:18px;padding:4px 11px;font-size:13px;font-weight:700;font-family:'Fredoka One',cursive}
+.res-actions{display:flex;gap:9px}
+.retry-btn{flex:1;padding:13px;background:#534AB7;color:#fff;border:none;border-radius:13px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer;transition:all .2s}
+.rev-btn{flex:1;padding:13px;background:#FCEBEB;color:#791F1F;border:2px solid #F09595;border-radius:13px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer;transition:all .2s}
+.retry-btn:hover,.rev-btn:hover{opacity:.85;transform:translateY(-1px)}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-title">🔤 Phonics Play</div>
+  <div class="app-sub">단모음 CVC · 이중자음 · 혼합모음</div>
+</div>
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="switchTab('learn')">📖 배우기</button>
+  <button class="nav-tab" onclick="switchTab('quiz')">🎯 퀴즈</button>
+</div>
+
+<div id="t-learn" class="screen active">
+  <div class="vowel-tabs" id="vtabs"></div>
+  <div class="word-grid" id="word-grid"></div>
+</div>
+
+<div id="t-quiz" class="screen">
+  <div id="q-start">
+    <div class="start-wrap">
+      <div class="start-title">퀴즈 시작!</div>
+      <div class="start-desc">소리를 듣고 알맞은 단어를 골라봐요.<br>어떤 내용을 풀까요?</div>
+      <div class="qsec-grid" id="qsec-grid"></div>
+      <button class="start-btn" onclick="startQuiz()">시작하기 ▶</button>
+    </div>
+  </div>
+  <div id="q-active" style="display:none">
+    <div class="qhdr">
+      <div class="qmeta">
+        <span class="qprog-lbl" id="qp-lbl">1 / 10</span>
+        <span class="qscore" id="qp-score">✓ 0</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" id="qp-fill" style="width:10%"></div></div>
+    </div>
+    <div class="qcard">
+      <div class="q-instr">소리를 듣고 알맞은 단어를 골라요!</div>
+      <button class="play-btn" id="play-btn" onclick="playQSound()">▶</button>
+      <div class="q-hint" id="q-hint">버튼을 누르면 소리가 나요</div>
+    </div>
+    <div class="q-opts" id="q-opts"></div>
+    <div class="fb" id="fb-msg"></div>
+    <button class="next-btn" id="next-btn" onclick="nextQ()">다음 문제 →</button>
+  </div>
+  <div id="q-result" style="display:none"></div>
+</div>
+
+<script>
+const VOWEL_META={
+  a:{label:'A',color:'#D85A30',bg:'#FAECE7'},
+  e:{label:'E',color:'#185FA5',bg:'#E6F1FB'},
+  i:{label:'I',color:'#993556',bg:'#FBEAF0'},
+  o:{label:'O',color:'#0F6E56',bg:'#E1F5EE'},
+  u:{label:'U',color:'#854F0B',bg:'#FAEEDA'}
+};
+
+const CVC={
+  a:[
+    {w:'cat',e:'🐱',p:'k-æ-t'},{w:'hat',e:'🎩',p:'h-æ-t'},{w:'bat',e:'🦇',p:'b-æ-t'},
+    {w:'map',e:'🗺️',p:'m-æ-p'},{w:'cap',e:'🧢',p:'k-æ-p'},{w:'nap',e:'😴',p:'n-æ-p'},
+    {w:'can',e:'🥫',p:'k-æ-n'},{w:'man',e:'👨',p:'m-æ-n'},{w:'fan',e:'🌀',p:'f-æ-n'},
+    {w:'bag',e:'👜',p:'b-æ-g'},{w:'tag',e:'🏷️',p:'t-æ-g'},{w:'wag',e:'🐕',p:'w-æ-g'}
+  ],
+  e:[
+    {w:'bed',e:'🛏️',p:'b-ɛ-d'},{w:'red',e:'🔴',p:'r-ɛ-d'},{w:'fed',e:'🍽️',p:'f-ɛ-d'},
+    {w:'hen',e:'🐔',p:'h-ɛ-n'},{w:'ten',e:'🔟',p:'t-ɛ-n'},{w:'pen',e:'🖊️',p:'p-ɛ-n'},
+    {w:'jet',e:'✈️',p:'dʒ-ɛ-t'},{w:'net',e:'🥅',p:'n-ɛ-t'},{w:'wet',e:'💧',p:'w-ɛ-t'},
+    {w:'beg',e:'🙏',p:'b-ɛ-g'},{w:'leg',e:'🦵',p:'l-ɛ-g'},{w:'peg',e:'📌',p:'p-ɛ-g'}
+  ],
+  i:[
+    {w:'pig',e:'🐷',p:'p-ɪ-g'},{w:'big',e:'🐘',p:'b-ɪ-g'},{w:'dig',e:'⛏️',p:'d-ɪ-g'},
+    {w:'sit',e:'🪑',p:'s-ɪ-t'},{w:'bit',e:'🦷',p:'b-ɪ-t'},{w:'hit',e:'🏏',p:'h-ɪ-t'},
+    {w:'fin',e:'🐟',p:'f-ɪ-n'},{w:'win',e:'🏆',p:'w-ɪ-n'},{w:'pin',e:'📍',p:'p-ɪ-n'},
+    {w:'lip',e:'💋',p:'l-ɪ-p'},{w:'tip',e:'💡',p:'t-ɪ-p'},{w:'dip',e:'🫗',p:'d-ɪ-p'}
+  ],
+  o:[
+    {w:'mop',e:'🧹',p:'m-ɒ-p'},{w:'hop',e:'🐸',p:'h-ɒ-p'},{w:'top',e:'🪀',p:'t-ɒ-p'},
+    {w:'fog',e:'🌫️',p:'f-ɒ-g'},{w:'log',e:'🪵',p:'l-ɒ-g'},{w:'dog',e:'🐶',p:'d-ɒ-g'},
+    {w:'pot',e:'🫕',p:'p-ɒ-t'},{w:'hot',e:'🌡️',p:'h-ɒ-t'},{w:'dot',e:'⚫',p:'d-ɒ-t'},
+    {w:'box',e:'📦',p:'b-ɒ-ks'},{w:'fox',e:'🦊',p:'f-ɒ-ks'},{w:'sob',e:'😭',p:'s-ɒ-b'}
+  ],
+  u:[
+    {w:'bug',e:'🐛',p:'b-ʌ-g'},{w:'hug',e:'🤗',p:'h-ʌ-g'},{w:'mug',e:'☕',p:'m-ʌ-g'},
+    {w:'sun',e:'☀️',p:'s-ʌ-n'},{w:'run',e:'🏃',p:'r-ʌ-n'},{w:'bun',e:'🍞',p:'b-ʌ-n'},
+    {w:'cut',e:'✂️',p:'k-ʌ-t'},{w:'but',e:'🔄',p:'b-ʌ-t'},{w:'gut',e:'💪',p:'g-ʌ-t'},
+    {w:'cup',e:'🥤',p:'k-ʌ-p'},{w:'pup',e:'🐶',p:'p-ʌ-p'},{w:'sub',e:'🥖',p:'s-ʌ-b'}
+  ]
+};
+
+const BLENDS=[
+  {w:'blue',e:'💙',v:'bl',p:'bl-uː'},{w:'clap',e:'👏',v:'cl',p:'kl-æp'},
+  {w:'flag',e:'🏴',v:'fl',p:'fl-æg'},{w:'grass',e:'🌿',v:'gr',p:'gr-æs'},
+  {w:'prize',e:'🥇',v:'pr',p:'pr-aɪz'},{w:'star',e:'⭐',v:'st',p:'st-ɑːr'},
+  {w:'tree',e:'🌳',v:'tr',p:'tr-iː'},{w:'swan',e:'🦢',v:'sw',p:'sw-ɒn'}
+];
+
+const DIGRAPHS=[
+  {w:'rain',e:'🌧️',v:'ai',p:'r-eɪ-n'},{w:'tree',e:'🌲',v:'ee',p:'tr-iː'},
+  {w:'bean',e:'🫘',v:'ea',p:'b-iː-n'},{w:'boat',e:'⛵',v:'oa',p:'b-oʊ-t'},
+  {w:'moon',e:'🌙',v:'oo',p:'m-uː-n'},{w:'house',e:'🏠',v:'ou',p:'h-aʊ-s'},
+  {w:'snow',e:'❄️',v:'ow',p:'sn-oʊ'},{w:'boy',e:'👦',v:'oy',p:'b-ɔɪ'}
+];
+
+const VOWELS=['a','e','i','o','u'];
+const SECTIONS=[
+  {id:'a',label:'모음 A',icon:'🔴',cnt:12},
+  {id:'e',label:'모음 E',icon:'🔵',cnt:12},
+  {id:'i',label:'모음 I',icon:'🩷',cnt:12},
+  {id:'o',label:'모음 O',icon:'🟢',cnt:12},
+  {id:'u',label:'모음 U',icon:'🟠',cnt:12},
+  {id:'blends',label:'이중자음',icon:'🔗',cnt:8},
+  {id:'digraphs',label:'혼합모음',icon:'🔀',cnt:8},
+  {id:'all',label:'전체 섞기',icon:'⭐',cnt:'all'}
+];
+
+let curVowel='a',quizSec='a',qQs=[],qIdx=0,qScore=0,qAnswered=false,qResults=[];
+
+function vcol(v){return VOWEL_META[v]?VOWEL_META[v].color:'#534AB7'}
+function vbg(v){return VOWEL_META[v]?VOWEL_META[v].bg:'#EEEDFE'}
+
+function setVowelCSS(v){
+  document.documentElement.style.setProperty('--vc',vcol(v));
+  document.documentElement.style.setProperty('--vbg',vbg(v));
+}
+
+function renderVtabs(){
+  const el=document.getElementById('vtabs');
+  const items=[...VOWELS.map(v=>({id:v,lbl:VOWEL_META[v].label})),{id:'blends',lbl:'BL'},{id:'digraphs',lbl:'DG'}];
+  el.innerHTML=items.map(x=>`<button class="vtab${x.id===curVowel?' active':''}" onclick="setLearnSec('${x.id}')" style="--vc:${vcol(x.id)};--vbg:${vbg(x.id)}">${x.lbl}</button>`).join('');
+}
+
+function getLearnWords(v){
+  if(v==='blends') return BLENDS.map(x=>({...x,type:'blend'}));
+  if(v==='digraphs') return DIGRAPHS.map(x=>({...x,type:'digraph'}));
+  return CVC[v].map(x=>({...x,vowel:v,type:'cvc'}));
+}
+
+function renderWordGrid(v){
+  const words=getLearnWords(v);
+  const c=vcol(v),b=vbg(v);
+  document.getElementById('word-grid').innerHTML=words.map(w=>{
+    let structure='';
+    if(w.type==='cvc'){
+      const vi=w.w.indexOf(v);
+      if(vi>=0){
+        const pre=w.w.slice(0,vi),post=w.w.slice(vi+v.length);
+        const mkc=(ch,cls)=>`<span class="wc-c ${cls}">${ch}</span>`;
+        structure=`<div class="wc-structure">${[...pre].map(ch=>mkc(ch,'wc-cons')).join('')}${mkc(v,'wc-vow')}${[...post].map(ch=>mkc(ch,'wc-cons')).join('')}</div>`;
+      }
+    } else {
+      structure=`<div class="wc-structure"><span class="wc-c wc-vow" style="background:${b};color:${c};width:auto;padding:0 5px">${w.v}</span></div>`;
+    }
+    let hlWord=w.w;
+    if(w.type==='cvc') hlWord=w.w.replace(v,`<span style="color:${c};font-weight:900">${v}</span>`);
+    else if(w.type==='blend') hlWord=`<span style="color:${c}">${w.v}</span>${w.w.slice(w.v.length)}`;
+    else hlWord=w.w.replace(w.v,`<span style="color:${c}">${w.v}</span>`);
+    return `<div class="word-card" style="--vc:${c};--vbg:${b}" onclick="playWord(this,'${w.w}')">
+      <div class="wc-emoji">${w.e}</div>
+      <div class="wc-word">${hlWord}</div>
+      <div class="wc-ipa">/${w.p}/</div>
+      ${structure}
+    </div>`;
+  }).join('');
+}
+
+function setLearnSec(v){curVowel=v;setVowelCSS(v);renderVtabs();renderWordGrid(v)}
+
+function playWord(el,word){
+  el.classList.add('playing');
+  setTimeout(()=>el.classList.remove('playing'),500);
+  speak(word);
+}
+
+function speak(txt,rate=0.82){
+  if(!window.speechSynthesis)return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(txt);
+  u.lang='en-US';u.rate=rate;u.pitch=1.05;
+  const vs=speechSynthesis.getVoices();
+  const v=vs.find(x=>x.lang==='en-US'&&x.name.includes('Female'))||vs.find(x=>x.lang==='en-US')||vs.find(x=>x.lang.startsWith('en'));
+  if(v)u.voice=v;
+  speechSynthesis.speak(u);
+}
+
+function switchTab(t){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('t-'+t).classList.add('active');
+  document.querySelectorAll('.nav-tab')[t==='learn'?0:1].classList.add('active');
+  if(t==='quiz')renderQSecs();
+}
+
+function renderQSecs(){
+  document.getElementById('qsec-grid').innerHTML=SECTIONS.map(s=>{
+    const c=vcol(s.id),b=vbg(s.id),isSel=quizSec===s.id;
+    return `<div class="qsec-card${isSel?' sel':''}" style="${isSel?`border-color:${c};background:${b}`:''}" onclick="selQSec(this,'${s.id}','${c}','${b}')">
+      <div class="qsc-icon">${s.icon}</div>
+      <div class="qsc-lbl" style="color:${isSel?c:'#2C2C2A'}">${s.label}</div>
+      <div class="qsc-cnt">${s.cnt==='all'?'전체':s.cnt+'개'}</div>
+    </div>`;
+  }).join('');
+}
+
+function selQSec(el,id,c,b){
+  quizSec=id;
+  document.querySelectorAll('.qsec-card').forEach(x=>{
+    x.classList.remove('sel');x.style.borderColor='';x.style.background='';
+    x.querySelector('.qsc-lbl').style.color='#2C2C2A';
+  });
+  el.classList.add('sel');el.style.borderColor=c;el.style.background=b;
+  el.querySelector('.qsc-lbl').style.color=c;
+}
+
+function getAllWords(){
+  return[
+    ...Object.entries(CVC).flatMap(([v,ws])=>ws.map(w=>({...w,vowel:v,type:'cvc',sec:v}))),
+    ...BLENDS.map(w=>({...w,type:'blend',sec:'blends'})),
+    ...DIGRAPHS.map(w=>({...w,type:'digraph',sec:'digraphs'}))
+  ];
+}
+
+function getPool(s){
+  if(s==='all') return getAllWords();
+  if(s==='blends') return BLENDS.map(w=>({...w,type:'blend',sec:'blends'}));
+  if(s==='digraphs') return DIGRAPHS.map(w=>({...w,type:'digraph',sec:'digraphs'}));
+  return CVC[s].map(w=>({...w,vowel:s,type:'cvc',sec:s}));
+}
+
+function shuffle(a){return[...a].sort(()=>Math.random()-.5)}
+
+function startQuiz(){
+  const pool=getPool(quizSec);
+  qQs=shuffle(pool).slice(0,Math.min(10,pool.length));
+  qIdx=0;qScore=0;qResults=[];qAnswered=false;
+  document.getElementById('q-start').style.display='none';
+  document.getElementById('q-active').style.display='block';
+  document.getElementById('q-result').style.display='none';
+  renderQ();
+}
+
+function renderQ(){
+  const q=qQs[qIdx],total=qQs.length;
+  document.getElementById('qp-lbl').textContent=`${qIdx+1} / ${total}`;
+  document.getElementById('qp-score').textContent=`✓ ${qScore}`;
+  document.getElementById('qp-fill').style.width=`${Math.round((qIdx/total)*100+10)}%`;
+  document.getElementById('fb-msg').className='fb';
+  document.getElementById('next-btn').className='next-btn';
+  qAnswered=false;
+  const pool=getPool(quizSec==='all'?'all':quizSec);
+  const others=shuffle(pool.filter(x=>x.w!==q.w)).slice(0,3);
+  const opts=shuffle([q,...others]);
+  document.getElementById('q-opts').innerHTML=opts.map(o=>`<button class="opt-btn" onclick="checkAns(this,'${o.w}','${q.w}')">${o.e}<br><span style="font-size:14px">${o.w}</span></button>`).join('');
+  document.getElementById('play-btn').className='play-btn';
+  document.getElementById('q-hint').textContent='버튼을 누르면 소리가 나요';
+  setTimeout(()=>playQSound(),350);
+}
+
+function playQSound(){
+  const q=qQs[qIdx];
+  document.getElementById('play-btn').classList.add('playing');
+  setTimeout(()=>document.getElementById('play-btn').classList.remove('playing'),500);
+  speak(q.w,0.78);
+  document.getElementById('q-hint').textContent='다시 들으려면 버튼을 눌러요';
+}
+
+function checkAns(btn,chosen,correct){
+  if(qAnswered)return;
+  qAnswered=true;
+  const q=qQs[qIdx],ok=chosen===correct;
+  if(ok)qScore++;
+  document.querySelectorAll('.opt-btn').forEach(b=>{
+    const bw=b.querySelector('span').textContent;
+    if(bw===correct)b.classList.add('correct');
+    else if(bw===chosen&&!ok)b.classList.add('wrong');
+    b.disabled=true;
+  });
+  const fb=document.getElementById('fb-msg');
+  if(ok){fb.className='fb correct';fb.textContent=['✨ 정답이에요!','🎉 잘했어요!','⭐ 맞았어요!'][Math.floor(Math.random()*3)]}
+  else{fb.className='fb wrong';fb.textContent=`❌ 틀렸어요. 정답은 "${correct}" 이에요!`}
+  qResults.push({word:q.w,emoji:q.e,sec:q.sec,correct:ok});
+  document.getElementById('next-btn').className='next-btn vis';
+}
+
+function nextQ(){qIdx++;qIdx>=qQs.length?showResult():renderQ()}
+
+function showResult(){
+  document.getElementById('q-active').style.display='none';
+  const re=document.getElementById('q-result');re.style.display='block';
+  const total=qQs.length,pct=Math.round((qScore/total)*100);
+  const emoji=pct>=80?'🏆':pct>=60?'👍':'💪';
+  const msg=pct>=80?'훌륭해요!':pct>=60?'잘했어요!':'더 연습해봐요!';
+  const wrong=qResults.filter(r=>!r.correct);
+  const bySec=qResults.reduce((acc,r)=>{const k=r.sec||'?';if(!acc[k])acc[k]={c:0,t:0};acc[k].t++;if(r.correct)acc[k].c++;return acc},{});
+  const bdHtml=Object.entries(bySec).map(([k,v])=>{
+    const pp=Math.round((v.c/v.t)*100);
+    const cls=pp>=100?'good':pp>=50?'ok':'bad';
+    const ico=pp>=100?'✅':pp>=50?'⚠️':'❌';
+    const lbl=VOWEL_META[k]?`모음 ${k.toUpperCase()}`:k==='blends'?'이중자음':k==='digraphs'?'혼합모음':k.toUpperCase();
+    return `<div class="bd-item"><div class="bd-word">${lbl}</div><div class="bd-bwrap"><div class="bd-bar ${cls}" style="width:${pp}%"></div></div><div class="bd-lbl">${v.c}/${v.t}</div><div class="bd-ico">${ico}</div></div>`;
+  }).join('');
+  re.innerHTML=`<div class="res-wrap">
+    <div class="res-emoji">${emoji}</div>
+    <div class="res-title">${msg}</div>
+    <div class="res-big" style="color:${pct>=80?'#27500A':pct>=60?'#633806':'#791F1F'}">${qScore}/${total}</div>
+    <div class="res-meta">정답률 ${pct}%</div>
+    <div class="bdown"><div class="bd-title">섹션별 결과</div>${bdHtml}</div>
+    ${wrong.length>0?`<div class="bdown"><div class="rev-title">⚠️ 복습이 필요한 단어</div><div class="rev-chips">${wrong.map(r=>`<span class="rev-chip">${r.emoji} ${r.word}</span>`).join('')}</div><div style="font-size:11px;color:#888">배우기 탭에서 다시 확인해봐요!</div></div>`:''}
+    <div class="res-actions">
+      <button class="retry-btn" onclick="restartQ()">다시 풀기 🔄</button>
+      ${wrong.length>0?`<button class="rev-btn" onclick="switchTab('learn')">배우기로 돌아가기 📖</button>`:''}
+    </div>
+  </div>`;
+}
+
+function restartQ(){
+  document.getElementById('q-result').style.display='none';
+  document.getElementById('q-start').style.display='block';
+  renderQSecs();
+}
+
+speechSynthesis.onvoiceschanged=()=>{};
+setLearnSec('a');
+renderVtabs();
+</script>
+</body>
+</html>
